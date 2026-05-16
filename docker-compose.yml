@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: exam-system-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: exam-system
+    volumes:
+      - mongodb_data:/data/db
+
+  backend:
+    build: ./backend
+    container_name: exam-system-backend
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: production
+      MONGODB_URI: mongodb://mongodb:27017/exam-system
+      JWT_SECRET: ${JWT_SECRET:-your_jwt_secret_key}
+      FRONTEND_URL: http://localhost:3000
+    depends_on:
+      - mongodb
+    volumes:
+      - ./backend:/app/backend
+      - /app/backend/node_modules
+
+  frontend:
+    build: ./frontend
+    container_name: exam-system-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app/frontend
+      - /app/frontend/node_modules
+
+volumes:
+  mongodb_data:
+
+networks:
+  default:
+    name: exam-system-network
